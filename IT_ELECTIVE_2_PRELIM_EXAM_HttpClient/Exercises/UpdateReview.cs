@@ -1,28 +1,58 @@
-namespace IT_ELECTIVE_2_PRELIM_EXAM_HttpClient.Exercises;
+using System.Text;
+using System.Text.Json;
 
-// EXERCISE 7: PUT Update Review
-// JSONPlaceholder API: https://jsonplaceholder.typicode.com/posts/{id}
-//
-// Your task:
-// 1. Create a JSON body: { "id": 1, "title": "Updated Review", "body": "Even better than before!", "userId": 1 }
-// 2. Wrap it in StringContent with media type "application/json"
-// 3. Send a PUT request to update post with ID 1
-// 4. Assert status code is 200 OK
-// 5. Parse the response JSON and assert the title is "Updated Review"
-//
-// Hint: Use await client.PutAsync(url, content)
+namespace IT_ELECTIVE_2_PRELIM_EXAM_HttpClient.Exercises;
 
 public static class UpdateReview
 {
     public static async Task Run(System.Net.Http.HttpClient client)
     {
-        // TODO: Create JSON string with id, title, body, and userId
-        // TODO: Create StringContent with the JSON and Content-Type "application/json"
-        // TODO: Send PUT request to https://jsonplaceholder.typicode.com/posts/1
-        // TODO: Assert status code is 200 OK
-        // TODO: Parse the response JSON
-        // TODO: Assert the title is "Updated Review"
+        string url = "https://jsonplaceholder.typicode.com/posts/1";
 
-        throw new NotImplementedException();
+        // Create JSON body
+        string json = """
+        {
+            "id": 1,
+            "title": "Updated Review",
+            "body": "Even better than before!",
+            "userId": 1
+        }
+        """;
+
+        // Create StringContent with JSON
+        using StringContent content = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json"
+        );
+
+        // Send PUT request
+        var response = await client.PutAsync(url, content);
+
+        // Assert status code is 200 OK
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            throw new Exception($"Expected 200 OK but got {response.StatusCode}");
+        }
+
+        // Read response body
+        string body = await response.Content.ReadAsStringAsync();
+
+        // Parse JSON response
+        using JsonDocument document = JsonDocument.Parse(body);
+
+        JsonElement root = document.RootElement;
+
+        // Assert title is "Updated Review"
+        if (!root.TryGetProperty("title", out JsonElement title) ||
+            title.GetString() != "Updated Review")
+        {
+            throw new Exception(
+                $"Expected title 'Updated Review' but got '{title.GetString()}'"
+            );
+        }
+
+        Console.WriteLine("Update Review test passed!");
+        Console.WriteLine($"Updated title: {title.GetString()}");
     }
 }
