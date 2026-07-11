@@ -1,29 +1,55 @@
-namespace IT_ELECTIVE_2_PRELIM_EXAM_HttpClient.Exercises;
+using System.Text;
+using System.Text.Json;
 
-// EXERCISE 6: POST Create Review
-// JSONPlaceholder API: https://jsonplaceholder.typicode.com/posts
-//
-// Your task:
-// 1. Create a JSON body string: { "title": "Great Pasta!", "body": "Loved this recipe", "userId": 1 }
-// 2. Wrap it in StringContent with media type "application/json"
-// 3. Send a POST request to the URL
-// 4. Assert status code is 201 Created
-// 5. Parse the response JSON and assert it contains an "id" field
-//
-// Hint: Use await client.PostAsync(url, content)
-// Hint: Use new StringContent(json, Encoding.UTF8, "application/json")
+namespace IT_ELECTIVE_2_PRELIM_EXAM_HttpClient.Exercises;
 
 public static class CreateReview
 {
     public static async Task Run(System.Net.Http.HttpClient client)
     {
-        // TODO: Create JSON string with title, body, and userId
-        // TODO: Create StringContent with the JSON and Content-Type "application/json"
-        // TODO: Send POST request to https://jsonplaceholder.typicode.com/posts
-        // TODO: Assert status code is 201 Created
-        // TODO: Parse the response JSON
-        // TODO: Assert the response has an "id" field with a value
+        string url = "https://jsonplaceholder.typicode.com/posts";
 
-        throw new NotImplementedException();
+        // Create JSON body
+        string json = """
+        {
+            "title": "Great Pasta!",
+            "body": "Loved this recipe",
+            "userId": 1
+        }
+        """;
+
+        // Create StringContent with JSON and application/json header
+        using StringContent content = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json"
+        );
+
+        // Send POST request
+        var response = await client.PostAsync(url, content);
+
+        // Assert status code is 201 Created
+        if (response.StatusCode != System.Net.HttpStatusCode.Created)
+        {
+            throw new Exception($"Expected 201 Created but got {response.StatusCode}");
+        }
+
+        // Read response body
+        string body = await response.Content.ReadAsStringAsync();
+
+        // Parse JSON response
+        using JsonDocument document = JsonDocument.Parse(body);
+
+        JsonElement root = document.RootElement;
+
+        // Assert response contains id field with value
+        if (!root.TryGetProperty("id", out JsonElement id) ||
+            id.GetInt32() <= 0)
+        {
+            throw new Exception("Response does not contain a valid id.");
+        }
+
+        Console.WriteLine("Create Review test passed!");
+        Console.WriteLine($"Created review ID: {id.GetInt32()}");
     }
 }
